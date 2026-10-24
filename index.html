@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DTV Sender · Web</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0f0f13;--card:#18181f;--card2:#202028;--border:#2e2e3a;--border2:#374157;
+  --indigo:#7c6ff7;--indigo2:#5b52e8;--indigo-glow:rgba(124,111,247,.15);
+  --teal:#2dd4bf;--teal-glow:rgba(45,212,191,.12);
+  --text:#f0f0f5;--muted:#888899;--muted2:#555566;
+  --ok:#34d399;--warn:#fbbf24;--err:#f87171;--info:#60a5fa;
+  --font:'Plus Jakarta Sans',sans-serif;--mono:'JetBrains Mono',monospace;
+  --r:12px;--r2:8px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh;line-height:1.6}
+
+/* ── TOPBAR ── */
+.topbar{background:var(--card);border-bottom:1px solid var(--border);
+  padding:0 24px;height:56px;display:flex;align-items:center;gap:14px;
+  position:sticky;top:0;z-index:100;backdrop-filter:blur(10px)}
+.logo{font-size:16px;font-weight:800;
+  background:linear-gradient(90deg,var(--indigo),var(--teal));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.topbar-sep{flex:1}
+.topbar-note{font-size:11px;color:var(--muted);background:var(--card2);
+  border:1px solid var(--border);border-radius:20px;padding:4px 12px}
+
+/* ── LAYOUT ── */
+.wrap{max-width:960px;margin:0 auto;padding:28px 16px 80px;
+  display:grid;grid-template-columns:1fr 360px;gap:22px;align-items:start}
+@media(max-width:720px){.wrap{grid-template-columns:1fr}}
+
+/* ── CARDS ── */
+.card{background:var(--card);border:1px solid var(--border);
+  border-radius:var(--r);padding:18px;margin-bottom:16px}
+.card-title{font-size:11px;font-weight:700;letter-spacing:.8px;
+  text-transform:uppercase;color:var(--muted2);margin-bottom:13px;
+  display:flex;align-items:center;gap:8px}
+
+/* ── INPUTS ── */
+textarea,input[type=text],input[type=number],input[type=password]{
+  width:100%;background:var(--card2);border:1px solid var(--border);
+  color:var(--text);font-family:var(--font);font-size:13px;
+  border-radius:var(--r2);padding:10px 13px;outline:none;
+  transition:border .2s,box-shadow .2s;resize:vertical}
+textarea:focus,input:focus{
+  border-color:var(--indigo);
+  box-shadow:0 0 0 3px var(--indigo-glow)}
+textarea{min-height:100px;line-height:1.55}
+.lbl{font-size:12px;font-weight:600;color:var(--muted);margin-bottom:6px;margin-top:12px}
+.lbl:first-child{margin-top:0}
+
+/* ── BUTTONS ── */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;
+  padding:10px 18px;border:none;border-radius:var(--r2);
+  font-family:var(--font);font-size:13px;font-weight:700;
+  cursor:pointer;transition:all .15s;width:100%;line-height:1}
+.btn:disabled{opacity:.35;cursor:not-allowed}
+.btn-primary{background:linear-gradient(135deg,var(--indigo2),var(--indigo));color:#fff}
+.btn-primary:hover:not(:disabled){filter:brightness(1.1);transform:translateY(-1px)}
+.btn-ghost{background:var(--card2);color:var(--muted);border:1px solid var(--border)}
+.btn-ghost:hover:not(:disabled){color:var(--text);border-color:var(--muted)}
+.btn-teal{background:rgba(45,212,191,.1);color:var(--teal);border:1px solid rgba(45,212,191,.28)}
+.btn-teal:hover:not(:disabled){background:rgba(45,212,191,.18)}
+.btn-ai{background:linear-gradient(135deg,#7c3aed,var(--indigo));color:#fff}
+.btn-ai:hover:not(:disabled){filter:brightness(1.1)}
+.btn-row{display:flex;gap:8px;margin-top:10px}
+.btn-row .btn{margin-top:0}
+.btn-sm{padding:6px 12px;font-size:12px}
+
+/* ── CONTACTOS ── */
+.contact-list{max-height:240px;overflow-y:auto;display:flex;
+  flex-direction:column;gap:4px;margin-top:10px}
+.contact-list::-webkit-scrollbar{width:4px}
+.contact-list::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
+.ci{display:flex;align-items:center;gap:9px;background:var(--card2);
+  border:1px solid var(--border);border-radius:var(--r2);
+  padding:8px 11px;font-size:13px;transition:border .2s}
+.ci.sending{border-color:var(--warn)}
+.ci.sent{border-color:rgba(52,211,153,.35);opacity:.75}
+.ci.error{border-color:rgba(248,113,113,.35)}
+.c-dot{width:7px;height:7px;border-radius:50%;background:var(--muted2);flex-shrink:0}
+.c-dot.sending{background:var(--warn);animation:pulse 1s infinite}
+.c-dot.sent{background:var(--ok)}.c-dot.error{background:var(--err)}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+.c-name{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600}
+.c-phone{font-size:11px;color:var(--muted);font-family:var(--mono)}
+.c-chk{accent-color:var(--indigo);flex-shrink:0;width:15px;height:15px}
+
+/* ── PROGRESS ── */
+.prog-bar{height:5px;background:var(--card2);border-radius:3px;overflow:hidden;margin:10px 0}
+.prog-fill{height:100%;background:linear-gradient(90deg,var(--indigo2),var(--teal));
+  border-radius:3px;transition:width .4s}
+.prog-row{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-top:4px}
+
+/* ── CHIPS ── */
+.chips{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.chip{font-size:12px;font-weight:600;padding:4px 12px;border-radius:20px}
+.chip.info{background:rgba(124,111,247,.1);color:var(--indigo);border:1px solid rgba(124,111,247,.2)}
+.chip.ok{background:rgba(52,211,153,.08);color:var(--ok);border:1px solid rgba(52,211,153,.2)}
+.chip.err{background:rgba(248,113,113,.08);color:var(--err);border:1px solid rgba(248,113,113,.2)}
+
+/* ── LOG ── */
+.log-box{font-family:var(--mono);font-size:11px;line-height:1.65;
+  height:180px;overflow-y:auto;background:var(--card2);
+  border:1px solid var(--border);border-radius:var(--r2);padding:10px 12px}
+.log-box::-webkit-scrollbar{width:4px}
+.log-box::-webkit-scrollbar-thumb{background:var(--border2)}
+.log-line{display:flex;gap:10px;padding:1px 0}
+.log-t{color:var(--muted2);flex-shrink:0}
+.log-m.ok{color:var(--ok)}.log-m.warn{color:var(--warn)}
+.log-m.error{color:var(--err)}.log-m.info{color:var(--info)}
+
+/* ── SPIN HINT ── */
+.spin-hint{font-size:11px;color:var(--muted);padding:8px 11px;
+  background:var(--card2);border-radius:var(--r2);
+  border-left:2px solid var(--indigo);margin-top:8px}
+.spin-hint code{font-family:var(--mono);font-size:10px;color:var(--teal);
+  background:rgba(45,212,191,.08);padding:1px 5px;border-radius:3px}
+
+/* ── PREVIEW ── */
+.preview-bbl{background:var(--card2);border:1px solid var(--border);
+  border-radius:12px 12px 12px 3px;padding:11px 15px;
+  font-size:13px;line-height:1.6;white-space:pre-wrap;margin-bottom:9px;
+  position:relative}
+.preview-n{position:absolute;top:-9px;right:12px;font-size:9px;font-weight:700;
+  background:rgba(124,111,247,.15);color:var(--indigo);
+  border:1px solid rgba(124,111,247,.3);padding:2px 8px;border-radius:10px}
+
+/* ── TOGGLE ── */
+.toggle-row{display:flex;align-items:center;justify-content:space-between;padding:6px 0}
+.toggle-sub{font-size:11px;color:var(--muted);margin-top:2px}
+.switch{position:relative;display:inline-block;width:36px;height:20px;flex-shrink:0}
+.switch input{opacity:0;width:0;height:0}
+.slider{position:absolute;cursor:pointer;inset:0;background:var(--border2);
+  border-radius:20px;transition:.2s}
+.slider::before{content:'';position:absolute;width:14px;height:14px;
+  left:3px;bottom:3px;background:#fff;border-radius:50%;transition:.2s}
+input:checked+.slider{background:var(--indigo)}
+input:checked+.slider::before{transform:translateX(16px)}
+input[type=range]{width:100%;accent-color:var(--indigo);margin-top:5px}
+.rval{font-family:var(--mono);font-size:13px;color:var(--indigo);font-weight:700}
+
+/* ── AI BOX ── */
+.ai-box{background:linear-gradient(135deg,rgba(124,111,247,.06),rgba(45,212,191,.04));
+  border:1px solid rgba(124,111,247,.2);border-radius:var(--r);padding:16px;margin-top:12px}
+.ai-title{font-size:12px;font-weight:700;color:var(--indigo);margin-bottom:10px;
+  display:flex;align-items:center;gap:7px}
+.ai-spinning{display:none;width:14px;height:14px;border:2px solid rgba(124,111,247,.3);
+  border-top-color:var(--indigo);border-radius:50%;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.ai-result{font-size:12px;color:var(--muted);margin-top:8px;font-style:italic;
+  max-height:120px;overflow-y:auto;white-space:pre-wrap}
+
+/* ── ALERT ── */
+.alert{padding:9px 12px;border-radius:var(--r2);font-size:12px;
+  font-weight:500;margin-top:10px;display:none}
+.alert.show.ok{display:block;background:rgba(52,211,153,.08);
+  color:var(--ok);border:1px solid rgba(52,211,153,.2)}
+.alert.show.err{display:block;background:rgba(248,113,113,.1);
+  color:var(--err);border:1px solid rgba(248,113,113,.25)}
+
+.divider{height:1px;background:var(--border);margin:13px 0}
+.empty{text-align:center;padding:28px 0;color:var(--muted2);font-size:13px}
+
+/* ── WPP INFO BOX ── */
+.wpp-info{background:rgba(45,212,191,.06);border:1px solid rgba(45,212,191,.2);
+  border-radius:var(--r2);padding:12px 14px;font-size:12px;color:var(--muted);
+  line-height:1.6;margin-bottom:14px}
+.wpp-info strong{color:var(--teal)}
+.step-n{display:inline-flex;align-items:center;justify-content:center;
+  width:20px;height:20px;border-radius:50%;background:var(--indigo2);
+  color:#fff;font-size:10px;font-weight:800;margin-right:6px;flex-shrink:0}
+.step-row{display:flex;align-items:flex-start;margin-bottom:7px}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <span class="logo">⚡ DTV Sender · Web</span>
+  <div class="topbar-sep"></div>
+  <span class="topbar-note">Abrí WhatsApp Web en otra pestaña antes de iniciar</span>
+</div>
+
+<div class="wrap">
+
+  <!-- COLUMNA PRINCIPAL -->
+  <div>
+
+    <!-- CONTACTOS -->
+    <div class="card">
+      <div class="card-title">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        Contactos
+      </div>
+      <div class="lbl">Pegá los números — uno por línea — con +54 o sin</div>
+      <textarea id="rawContacts" rows="6" placeholder="+54935512345678&#10;+54911987654321&#10;3512345678"></textarea>
+      <div class="btn-row">
+        <button class="btn btn-ghost btn-sm" id="btnClear">🗑 Limpiar</button>
+        <button class="btn btn-teal btn-sm" id="btnParse">▶ Cargar contactos</button>
+      </div>
+      <div id="alertContacts" class="alert"></div>
+      <div id="contactWrap" style="display:none;margin-top:14px">
+        <div style="display:flex;align-items:center;gap:9px;margin-bottom:8px">
+          <input type="checkbox" class="c-chk" id="chkAll">
+          <label for="chkAll" style="font-size:13px;cursor:pointer;flex:1">Seleccionar todos</label>
+          <span style="font-size:12px;color:var(--muted)" id="selCount">0 sel.</span>
+        </div>
+        <div class="contact-list" id="contactGrid"></div>
+      </div>
+    </div>
+
+    <!-- MENSAJE + IA -->
+    <div class="card">
+      <div class="card-title">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        Mensaje
+      </div>
+      <textarea id="template" rows="17"></textarea>
+      <div class="spin-hint">
+        SpinTax: <code>{opción A|opción B|opción C}</code> · Firma: <code>[firma]</code> · Emoji: <code>[emoji]</code>
+      </div>
+
+      <!-- IA -->
+      <div class="ai-box">
+        <div class="ai-title">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a10 10 0 1 0 10 10H12V2z"/><path d="M21.17 8H12V2.83"/></svg>
+          Reformular con IA
+          <div class="ai-spinning" id="aiSpinner"></div>
+        </div>
+        <div class="lbl" style="margin-top:0">Tu API Key de Claude (Anthropic)</div>
+        <input type="password" id="apiKey" placeholder="sk-ant-api03-..." autocomplete="off">
+        <div style="font-size:11px;color:var(--muted2);margin-top:5px">
+          La key solo se usa en tu browser, no se guarda en ningún servidor.
+          Conseguila en <a href="https://console.anthropic.com" target="_blank" style="color:var(--indigo)">console.anthropic.com</a>
+        </div>
+        <div class="lbl">Instrucción para la IA (opcional)</div>
+        <input type="text" id="aiPrompt" placeholder="Ej: Hacelo más directo y urgente, enfocado en el precio" value="Reformulá este mensaje de ventas de DirecTV manteniendo el SpinTax {opción A|opción B} y las variables [firma] [emoji]. Hacelo más natural y menos formal, que suene como una persona real escribiendo por WhatsApp. Mantené exactamente el mismo formato de SpinTax.">
+        <div class="btn-row" style="margin-top:10px">
+          <button class="btn btn-ai" id="btnAI">✨ Reformular con Claude</button>
+        </div>
+        <div class="ai-result" id="aiResult" style="display:none"></div>
+        <div id="alertAI" class="alert"></div>
+      </div>
+
+      <div class="divider"></div>
+      <div class="lbl">Firmas rotativas <code style="font-family:var(--mono);font-size:10px;color:var(--teal)">[firma]</code></div>
+      <input type="text" id="signPool" value="Matteo · DTV|Mateo DirecTV|Tu asesor DTV">
+      <div class="lbl">Emojis rotativos <code style="font-family:var(--mono);font-size:10px;color:var(--teal)">[emoji]</code></div>
+      <input type="text" id="emojiPool" value="🌟💫✨🎯📺🏆">
+      <div class="btn-row" style="margin-top:12px">
+        <button class="btn btn-ghost btn-sm" id="btnDefault">↩ Default</button>
+        <button class="btn btn-teal btn-sm" id="btnPreview">👁 3 Previews</button>
+      </div>
+      <div id="previewBox" style="margin-top:12px"></div>
+    </div>
+
+  </div>
+
+  <!-- COLUMNA DERECHA -->
+  <div style="position:sticky;top:68px">
+
+    <!-- CÓMO FUNCIONA -->
+    <div class="card">
+      <div class="card-title">💬 Cómo funciona</div>
+      <div class="wpp-info">
+        <div class="step-row"><span class="step-n">1</span>Abrí <strong>WhatsApp Web</strong> en otra pestaña del mismo browser</div>
+        <div class="step-row"><span class="step-n">2</span>Cargá los contactos y el mensaje acá</div>
+        <div class="step-row"><span class="step-n">3</span>Click en <strong>Iniciar difusión</strong> — se abren los chats automáticamente</div>
+        <div class="step-row" style="margin-bottom:0"><span class="step-n">4</span>Cada mensaje se manda solo con el delay configurado</div>
+      </div>
+      <button class="btn btn-teal btn-sm" id="btnOpenWA">💬 Abrir WhatsApp Web</button>
+    </div>
+
+    <!-- CONFIG ANTI-BAN -->
+    <div class="card">
+      <div class="card-title">🛡 Anti-ban</div>
+      <div style="display:flex;align-items:center;gap:12px">
+        <input type="range" id="delaySlider" min="15" max="150" value="45" style="flex:1">
+        <span class="rval" id="delayVal">45s</span>
+      </div>
+      <div style="font-size:11px;color:var(--muted);margin-top:4px">Delay entre mensajes · Mínimo recomendado: 45s</div>
+
+      <div class="divider"></div>
+      <div class="toggle-row">
+        <div>
+          <div style="font-size:13px;font-weight:500">Pausa larga automática</div>
+          <div class="toggle-sub">Simula descansos humanos</div>
+        </div>
+        <label class="switch"><input type="checkbox" id="longOn"><span class="slider"></span></label>
+      </div>
+      <div id="longCfg" style="display:none;margin-top:8px">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+          <div><div class="lbl">Cada N mensajes</div><input type="number" id="longEvery" value="20" min="5"></div>
+          <div><div class="lbl">Pausa (min)</div><input type="number" id="longMins" value="8" min="2"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PROGRESO -->
+    <div class="card">
+      <div class="card-title">🚀 Difusión</div>
+
+      <div id="progressWrap" style="display:none;margin-bottom:14px">
+        <div class="chips">
+          <div class="chip info">📋 <span id="chipTotal">0</span></div>
+          <div class="chip ok">✓ <span id="chipSent">0</span></div>
+          <div class="chip err">✗ <span id="chipErr">0</span></div>
+        </div>
+        <div class="prog-bar"><div class="prog-fill" id="progFill" style="width:0%"></div></div>
+        <div class="prog-row"><span id="progLbl">Iniciando...</span><span id="progPct">0%</span></div>
+      </div>
+
+      <div class="contact-list" id="sendList" style="max-height:140px;margin-bottom:12px"></div>
+      <div class="log-box" id="logBox"></div>
+
+      <div id="ctrlStart" style="margin-top:12px">
+        <button class="btn btn-primary" id="btnStart">🚀 Iniciar difusión</button>
+      </div>
+      <div id="ctrlRunning" style="display:none;margin-top:12px">
+        <div class="btn-row">
+          <button class="btn btn-warn" id="btnPause" style="flex:1">⏸ Pausar</button>
+          <button class="btn btn-err"  id="btnStop"  style="flex:1">⏹ Detener</button>
+        </div>
+      </div>
+      <div id="ctrlDone" style="display:none;margin-top:12px">
+        <button class="btn btn-primary" id="btnReset">🔄 Nueva difusión</button>
+      </div>
+      <div id="alertSend" class="alert"></div>
+    </div>
+
+  </div>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
